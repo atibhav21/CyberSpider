@@ -8,7 +8,7 @@
 
 struct Node
 {
-    Node()
+    /*Node()
     {
         deleted = false;
     }
@@ -18,7 +18,7 @@ struct Node
         strcpy(m_context, context);
         m_offset = offset;
         deleted = false;
-    }
+    }*/
     char m_data[121];
     char m_context[121];
     BinaryFile::Offset m_offset;
@@ -88,6 +88,7 @@ private:
     //HashMap* websiteMap;
     BinaryFile bf;
     int numBuckets;
+    string m_filename;
 };
 
 #endif // DISKMULTIMAP_H_

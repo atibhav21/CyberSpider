@@ -68,10 +68,14 @@ int main()
         if (x.erase("hmm.exe", "pfft.exe", "m52902") == 2)
             cout << "Just erased 2 items from the table!\n";
         // line 2
-        if (x.erase("hmm.exe", "pfft.exe", "m10001") > 0)
+        /*if (x.erase("hmm.exe", "pfft.exe", "m10001") > 0)
             cout << "Just erased at least 1 item from the table!\n";
-        // line 3
-        if (x.erase("blah.exe", "bletch.exe", "m66666") == 0)
-            cout << "I didn't erase this item cause it wasn't there\n";
+        // line 3*/
+        //if (x.erase("blah.exe", "bletch.exe", "m66666") == 0)
+            //cout << "I didn't erase this item cause it wasn't there\n";
+        x.insert("abc.exe", "www.xda.com", "m12223");
+        x.insert("aaa.exe", "werrc.exe", "m12333");
+        x.insert("www.goooog.com", "asss.ser", "m1405");
+        
     }
 }
