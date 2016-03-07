@@ -112,7 +112,7 @@ BinaryFile::Offset DiskMultiMap::hashFunction(const char* data)
 {
     std::hash<std::string> str_hash;
     BinaryFile::Offset index = str_hash(data) % numBuckets;
-    return startOfMap1 + index* sizeof(Node);
+    return startOfMap + index* sizeof(Node);
     
     //return the offset of the first link in the hash map.
 }
@@ -135,14 +135,14 @@ bool DiskMultiMap::createNew(const std::string& filename, unsigned int nBuckets)
     //also write the offset for the head node of the deleted linked list.
     offset+= sizeof(firstDeletedNode);
     
-    startOfMap1 = offset;
+    startOfMap = offset;
     
     numBuckets = nBuckets;
     string emptyString = "";
     Node emptyNode(emptyString.c_str(), emptyString.c_str(), 0);
     for(int i = 0; i<numBuckets; i++)
     {
-        BinaryFile::Offset m_offset = startOfMap1 + i*sizeof(Node);
+        BinaryFile::Offset m_offset = startOfMap + i*sizeof(Node);
         emptyNode.m_offset = m_offset;
         emptyNode.next = -1;
         bf.write(emptyNode,m_offset);
@@ -169,7 +169,7 @@ bool DiskMultiMap::openExisting(const std::string& filename)
     offset+= sizeof(numBuckets);
     bf.read(firstDeletedNode, offset);
     offset+= sizeof(firstDeletedNode);
-    bf.read(startOfMap1, offset);
+    bf.read(startOfMap, offset);
     
     return true;
 }

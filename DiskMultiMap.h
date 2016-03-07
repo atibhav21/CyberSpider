@@ -79,7 +79,7 @@ private:
     // Your private member declarations will go here
     BinaryFile::Offset hashFunction(const char* data);
     void addToDeleted(BinaryFile::Offset);
-    BinaryFile::Offset startOfMap1;
+    BinaryFile::Offset startOfMap;
     //store some initial data in the map
     
     BinaryFile::Offset firstDeletedNode;
