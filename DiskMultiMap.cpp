@@ -150,6 +150,7 @@ bool DiskMultiMap::createNew(const std::string& filename, unsigned int nBuckets)
     strcpy(emptyNode.m_context, "");
     for(int i = 0; i<numBuckets; i++)
     {
+        //TODO: Change the first item entered into just an Offset type
         BinaryFile::Offset m_offset = startOfMap + i*sizeof(Node);
         emptyNode.m_offset = m_offset;
         emptyNode.next = -1;

@@ -146,6 +146,7 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
         {
             if(find(badEntitiesFound.begin(), badEntitiesFound.end(), val) == badEntitiesFound.end())
             {
+                //not already present in the badEntitiesFound vector
                 badEntitiesFound.push_back(val);
                 maliciousCount++;
             }
@@ -161,6 +162,36 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
         }*/
     }
     return maliciousCount;
+}
+
+bool IntelWeb::purge(const std::string& entity)
+{
+    bool returnValue = false;
+    // use an iterator to get the entity from each map. Using the iterator, find the key if entity is a value and erase the entire item.
+    DiskMultiMap::Iterator it = map_fileToSite.search(entity);
+    while(it.isValid())
+    {
+        //erases items where it is the key.
+        if(map_fileToSite.erase((*it).key, (*it).value, (*it).context) > 0)
+        {
+            map_siteToFile.erase((*it).value, (*it).key, (*it).context);
+            returnValue = true;
+        }
+        ++it;
+    }
+    it = map_siteToFile.search(entity);
+    while(it.isValid())
+    {
+        //erase items where it is the value
+        if(map_siteToFile.erase((*it).key, (*it).value, (*it).context) > 0)
+        {
+            map_fileToSite.erase((*it).value, (*it).key, (*it).context);
+            returnValue = true;
+        }
+        ++it;
+    }
+    return returnValue;
+    
 }
 
 IntelWeb::~IntelWeb()

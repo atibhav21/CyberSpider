@@ -25,4 +25,14 @@ struct InteractionTuple
     std::string context;
 };
 
+inline
+bool operator==(const InteractionTuple& I1, const InteractionTuple& I2)
+{
+    if(I1.from == I2.from && I1.to == I2.to && I1.context == I2.context)
+    {
+        return true;
+    }
+    return false;
+}
+
 #endif // INTERACTIONTUPLE_H_
