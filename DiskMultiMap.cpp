@@ -57,11 +57,11 @@ DiskMultiMap::Iterator::Iterator()
     m_validity = false;
 }
 
-DiskMultiMap::Iterator::Iterator(const BinaryFile::Offset m_offset, DiskMultiMap* map, const std::string& key)
+DiskMultiMap::Iterator::Iterator(const BinaryFile::Offset m_offset, BinaryFile* bf, const std::string& key)
 {
-    m_map = map;
+    m_file = bf;
     m_posFromStart = m_offset;
-    m_map->bf.read(m_node, m_offset);
+    m_file->read(m_node, m_offset);
     m_key = key;
     if(m_node.next == -1)
     {
@@ -91,7 +91,7 @@ DiskMultiMap::Iterator& DiskMultiMap::Iterator::operator++()
         return *this;
     }
     m_posFromStart = m_node.next;
-    m_map->bf.read(m_node, m_posFromStart);
+    m_file->read(m_node, m_posFromStart);
     return *this;
 }
 
@@ -143,7 +143,7 @@ bool DiskMultiMap::createNew(const std::string& filename, unsigned int nBuckets)
     
     m_filename = filename;
     
-    numBuckets = nBuckets;
+    numBuckets = nBuckets*4 /3;
     string emptyString = "";
     Node emptyNode;//(emptyString.c_str(), emptyString.c_str(), 0);
     strcpy(emptyNode.m_data, "");
@@ -231,6 +231,7 @@ bool DiskMultiMap::insert(const std::string &key, const std::string &value, cons
             strcpy(newNode.m_context, context.c_str());
             newNode.m_offset = deletedNode.m_offset;
             newNode.next = -1;
+            newNode.deleted = false;
             if(bf.write(newNode, newNode.m_offset) == false)
             {
                 cerr<<"Error in reusing Node"<<endl;
@@ -281,7 +282,7 @@ DiskMultiMap::Iterator DiskMultiMap::search(const std::string& key)
 {
     //TODO: Check if it works
     BinaryFile::Offset m_offset = hashFunction(key.c_str());
-    Iterator it(m_offset, this, key);
+    Iterator it(m_offset, &bf, key);
     if((*it).value == "" || (*it).context == "")
     {
         ++it;

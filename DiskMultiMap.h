@@ -50,7 +50,7 @@ public:
     {
     public:
         Iterator();
-        Iterator(const BinaryFile::Offset m_offset,DiskMultiMap*,const std::string& key);
+        Iterator(const BinaryFile::Offset m_offset,BinaryFile*,const std::string& key);
         // You may add additional constructors
         bool isValid() const;
         Iterator& operator++();
@@ -60,7 +60,7 @@ public:
         BinaryFile::Offset m_posFromStart;
         bool m_validity;
         void setInvalid();
-        DiskMultiMap* m_map;
+        BinaryFile* m_file;
         std::string m_key;
         Node m_node;
         // Your private member declarations will go here
