@@ -94,9 +94,18 @@ bool IntelWeb::malItemsContains(const std::vector<std::string>& badEntitiesFound
     return false;
 }
 
+void IntelWeb::addToInteractionsVector(std::vector<InteractionTuple>& interactions, InteractionTuple& I)
+{
+    //TODO: Possibly use Insertion sort since the elements inside are already sorted?
+    //check for duplicates also. Duplicates not allowed
+    //ordered by context, then from field, then to field
+    
+}
+
 unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigned int minPrevalenceToBeGood,
                    std::vector<std::string>& badEntitiesFound, std::vector<InteractionTuple>& interactions)
 {
+    unsigned int maliciousCount = 0;
     vector<std::string>::const_iterator it = indicators.begin();
     for(; it!= indicators.end(); it++)
     {
@@ -116,6 +125,10 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
             {
                 malItemsQueue.push(m.value);
             }
+            else
+            {
+                //push them onto interactions vector?
+            }
             ++itemIterator;
         }
         
@@ -134,6 +147,7 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
             if(find(badEntitiesFound.begin(), badEntitiesFound.end(), val) == badEntitiesFound.end())
             {
                 badEntitiesFound.push_back(val);
+                maliciousCount++;
             }
         }
         /*itemIterator = map_siteToFile.search(val);
@@ -146,7 +160,7 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
             
         }*/
     }
-    
+    return maliciousCount;
 }
 
 IntelWeb::~IntelWeb()

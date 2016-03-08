@@ -14,12 +14,7 @@
 #include <string>
 #include <vector>
 #include <queue>
-
-struct MalItems
-{
-    std::string data;
-    int count;
-};
+#include "InteractionTuple.h"
 
 class IntelWeb
 {
@@ -43,6 +38,7 @@ private:
     DiskMultiMap map_siteToFile; // maps from second argument to first argument
     queue<std::string> malItemsQueue;
     bool malItemsContains(const std::vector<std::string>& badEntitiesFound, std::string& val) const;
+    void addToInteractionsVector(std::vector<InteractionTuple>& interactions, InteractionTuple& I);
 };
 
 #endif // INTELWEB_H_
