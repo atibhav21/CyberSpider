@@ -84,6 +84,33 @@ int main()
     
 }*/
 
+/*#include "IntelWeb.h"
+#include "InteractionTuple.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <map>
+#include <set>
+#include <string>
+#include <cstdlib>
+using namespace std;
+
+int main()
+{
+    IntelWeb I;
+    I.openExisting("mydb");
+    vector<string> badItems;
+    badItems.push_back("http://www.virus.com");
+    badItems.push_back("disk--eater.exe");
+    badItems.push_back("datakill.exe");
+    badItems.push_back("http://www.stealthyattack.com");
+    
+    vector<string> badEntitiesFound;
+    vector<InteractionTuple> badInteractions;
+    I.crawl(badItems, 12, badEntitiesFound, badInteractions);
+}*/
+
 #include "IntelWeb.h"
 #include "InteractionTuple.h"
 #include <iostream>

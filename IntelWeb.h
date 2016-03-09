@@ -36,7 +36,7 @@ private:
     // Your private member declarations will go here
     DiskMultiMap map_fileToSite; // maps from first argument to second argument
     DiskMultiMap map_siteToFile; // maps from second argument to first argument
-    queue<std::string> malItemsQueue;
+    
     bool malItemsContains(const std::vector<std::string>& badEntitiesFound, std::string& val) const;
     void addToInteractionsVector(std::vector<InteractionTuple>& interactions, InteractionTuple& I);
 };

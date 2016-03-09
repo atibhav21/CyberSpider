@@ -198,7 +198,7 @@ bool DiskMultiMap::insert(const std::string &key, const std::string &value, cons
 {
     if(strlen(key.c_str())>= 121 || strlen(value.c_str())>=121 || strlen(context.c_str())>=121)
     {
-        cerr<<"Some Input Value is greater than 121 bytes"<<endl;
+        cout<<"Some Input Value is greater than 121 bytes"<<endl;
         return false;
     }
     //get the offset of the

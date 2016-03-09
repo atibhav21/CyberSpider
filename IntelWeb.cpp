@@ -55,7 +55,7 @@ void IntelWeb::close()
 
 bool IntelWeb::ingest(const std::string& telemetryFile)
 {
-    cout<<"Ingest Method Called"<<endl;
+    //cout<<"Ingest Method Called"<<endl;
     ifstream inf(telemetryFile);
     if(! inf)
     {
@@ -66,26 +66,23 @@ bool IntelWeb::ingest(const std::string& telemetryFile)
     {
         istringstream iss(line);
         string key,value,context;
-        if(! (iss >> key >> value >> context))
+        if(! (iss >> context >> key >> value))
         {
-            cerr<<"Ignoring line due to bad input format"<<line;
+            cout<<"Ignoring line due to bad input format"<<line;
         }
         //possible bug with insert method
         if(map_fileToSite.insert(key, value, context) == false)
         {
-            cerr<<"Error in inserting into file"<<endl;
+            cout<<"Error in inserting into file"<<endl;
             return false;
         }
-        cerr<<"Point D"<<endl;
         if(map_siteToFile.insert(value, key, context) == false)
         {
-            cerr<<"Error in inserting into file"<<endl;
+            cout<<"Error in inserting into file"<<endl;
             return false;
         }
-        cerr<<"Key is: "<<key<<" Value is: "<<value<<" Context is: "<<context<<endl;
-        
+        cout<<context<<" "<<key<<" "<<value<<endl;
     }
-    cout<<"Files inputted"<<endl;
     return true;
 }
 
@@ -146,6 +143,7 @@ void IntelWeb::addToInteractionsVector(std::vector<InteractionTuple>& interactio
     if(alreadyContains == false)
     {
         interactions.push_back(I);
+        cout<<"Malicious Interaction Logged"<<endl;
         sort(interactions.begin(), interactions.end(), compare);
     }
     
@@ -154,6 +152,7 @@ void IntelWeb::addToInteractionsVector(std::vector<InteractionTuple>& interactio
 unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigned int minPrevalenceToBeGood,
                    std::vector<std::string>& badEntitiesFound, std::vector<InteractionTuple>& interactions)
 {
+    /*queue<std::string> malItemsQueue;
     unsigned int maliciousCount = 0;
     vector<std::string>::const_iterator it = indicators.begin();
     for(; it!= indicators.end(); it++)
@@ -162,6 +161,7 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
     }
     while(!malItemsQueue.empty())
     {
+        //cout<<"A"<<endl;
         int count = 0;
         std::string val = malItemsQueue.front();
         malItemsQueue.pop();
@@ -174,29 +174,35 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
             {
                 malItemsQueue.push(m.value);
             }
-            else
-            {
-                //push them onto interactions vector?
-            }
+            //push them onto bad interactions vector
+            /*InteractionTuple I;
+            I.from = val;
+            I.to = (*itemIterator).value;
+            I.context = (*itemIterator).context;
+            addToInteractionsVector(interactions, I);
+            //interactions.push_back(I);
             ++itemIterator;
+            
         }
         
-        if(malItemsContains(badEntitiesFound, val) == true)
+        /*if(malItemsContains(badEntitiesFound, val) == true)
         {
             continue;
             //item is already part of the badEntitiesFound so continue with the next item
         }
+        
         itemIterator = map_siteToFile.search(val);
         while(itemIterator.isValid())
         {
             count++;
         }
-        if(count < minPrevalenceToBeGood)
+        if(count>0 && count < minPrevalenceToBeGood)
         {
             if(find(badEntitiesFound.begin(), badEntitiesFound.end(), val) == badEntitiesFound.end())
             {
                 //not already present in the badEntitiesFound vector
                 badEntitiesFound.push_back(val);
+                cout<<"malicious item found"<<endl;
                 maliciousCount++;
             }
         }
@@ -208,8 +214,62 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
         if(count < minPrevalenceToBeGood)
         {
             
-        }*/
+        }
+    }*/
+    int maliciousCount = 0;
+    vector<string> possibleMaliciousKeyValues;
+    for(int k = 0; k<badEntitiesFound.size(); k++)
+    {
+        cout<<"Item added "<<endl;
+        possibleMaliciousKeyValues.push_back(badEntitiesFound[k]);
     }
+    for(int i = 0; i<possibleMaliciousKeyValues.size(); i++)
+    {
+        cout<<"Iteration "<<i<<endl;
+        string val;
+        val = possibleMaliciousKeyValues[i];
+        DiskMultiMap::Iterator it = map_fileToSite.search(val);
+        while(it.isValid())
+        {
+            MultiMapTuple M = *it;
+            if(find(possibleMaliciousKeyValues.begin(), possibleMaliciousKeyValues.end(), M.value) == possibleMaliciousKeyValues.end())
+            {
+                cout<< "Item added to possible Values"<<endl;
+                possibleMaliciousKeyValues.push_back(M.value);
+            }
+        }
+    }
+    for(int j = 0; j<possibleMaliciousKeyValues.size();j++)
+    {
+        cout<<"Iteration "<<j<<endl;
+        if(find(badEntitiesFound.begin(), badEntitiesFound.end(), possibleMaliciousKeyValues[j]) != possibleMaliciousKeyValues.end())
+        {
+            cout<<"Item already in Bad Entities so not Pushing back"<<endl;
+            continue;
+        }
+        int count = 0;
+        string val = possibleMaliciousKeyValues[j];
+        DiskMultiMap::Iterator it = map_fileToSite.search(val);
+        while(it.isValid())
+        {
+            count++;
+            ++it;
+        }
+        it = map_siteToFile.search(val);
+        while(it.isValid())
+        {
+            count++;
+            ++it;
+        }
+        if(count<minPrevalenceToBeGood)
+        {
+            cout<<"Item Pushed Onto badEntities"<<endl;
+            badEntitiesFound.push_back(val);
+            maliciousCount++;
+        }
+    }
+
+    cout<<"End of Crawl Reached"<<endl;
     return maliciousCount;
 }
 
