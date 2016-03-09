@@ -47,17 +47,6 @@ int main()
     }
     
     
-    DiskMultiMap x;
-    x.createNew("myhashtable.dat",100); // empty, with 100 buckets
-    x.insert("hmm.exe", "pfft.exe", "m52902");
-    x.insert("hmm.exe", "pfft.exe", "m52902");
-    x.insert("hmm.exe", "pfft.exe", "m10001");
-    x.insert("blah.exe", "bletch.exe", "m0003");
-    DiskMultiMap::Iterator it = x.search("goober.exe");
-    if ( ! it.isValid())
-        cout << "I couldn’t find goober.exe\n";
-    
-    
     {
         DiskMultiMap x;
         x.createNew("myhashtable.dat",100); // empty, with 100 buckets
@@ -65,6 +54,19 @@ int main()
         x.insert("hmm.exe", "pfft.exe", "m52902");
         x.insert("hmm.exe", "pfft.exe", "m10001");
         x.insert("blah.exe", "bletch.exe", "m0003");
+        DiskMultiMap::Iterator it = x.search("goober.exe");
+        if ( ! it.isValid())
+            cout << "I couldn’t find goober.exe\n";
+    }
+    
+    
+    {
+        DiskMultiMap x;
+        x.openExisting("myhashtable.dat"); // empty, with 100 buckets
+        //x.insert("hmm.exe", "pfft.exe", "m52902");
+        //x.insert("hmm.exe", "pfft.exe", "m52902");
+        //x.insert("hmm.exe", "pfft.exe", "m10001");
+        //x.insert("blah.exe", "bletch.exe", "m0003");
         // line 1
         if (x.erase("hmm.exe", "pfft.exe", "m52902") == 2)
             cout << "Just erased 2 items from the table!\n";

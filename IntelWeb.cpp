@@ -55,12 +55,12 @@ void IntelWeb::close()
 
 bool IntelWeb::ingest(const std::string& telemetryFile)
 {
+    cout<<"Ingest Method Called"<<endl;
     ifstream inf(telemetryFile);
     if(! inf)
     {
         return false;
     }
-    
     string line;
     while(getline(inf,line))
     {
@@ -70,18 +70,22 @@ bool IntelWeb::ingest(const std::string& telemetryFile)
         {
             cerr<<"Ignoring line due to bad input format"<<line;
         }
+        //possible bug with insert method
         if(map_fileToSite.insert(key, value, context) == false)
         {
             cerr<<"Error in inserting into file"<<endl;
             return false;
         }
+        cerr<<"Point D"<<endl;
         if(map_siteToFile.insert(value, key, context) == false)
         {
             cerr<<"Error in inserting into file"<<endl;
             return false;
         }
+        cerr<<"Key is: "<<key<<" Value is: "<<value<<" Context is: "<<context<<endl;
         
     }
+    cout<<"Files inputted"<<endl;
     return true;
 }
 

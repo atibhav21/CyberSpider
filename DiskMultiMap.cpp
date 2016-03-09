@@ -131,6 +131,7 @@ bool DiskMultiMap::createNew(const std::string& filename, unsigned int nBuckets)
     }
     //TODO: write some preliminary data about the file in the beginning of the file over here
     // write stuff like start of map1, numberofbuckets, offset of first deleted node
+    numBuckets = nBuckets*4 /3;
     firstDeletedNode = -1;
     BinaryFile::Offset offset = 0;
     bf.write(numBuckets, offset);
@@ -143,7 +144,7 @@ bool DiskMultiMap::createNew(const std::string& filename, unsigned int nBuckets)
     
     m_filename = filename;
     
-    numBuckets = nBuckets*4 /3;
+
     string emptyString = "";
     Node emptyNode;//(emptyString.c_str(), emptyString.c_str(), 0);
     strcpy(emptyNode.m_data, "");
@@ -180,6 +181,7 @@ bool DiskMultiMap::openExisting(const std::string& filename)
     bf.read(firstDeletedNode, offset);
     offset+= sizeof(firstDeletedNode);
     bf.read(startOfMap, offset);
+    startOfMap = offset;
     m_filename = filename;
     return true;
 }
