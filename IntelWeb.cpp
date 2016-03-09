@@ -94,11 +94,56 @@ bool IntelWeb::malItemsContains(const std::vector<std::string>& badEntitiesFound
     return false;
 }
 
+bool compare(const InteractionTuple& I1, const InteractionTuple& I2)
+{
+    if(I1.context< I2.context)
+    {
+        return true;
+    }
+    else if(I1.context == I2.context)
+    {
+        if(I1.from < I2.from)
+        {
+            return true;
+        }
+        else if(I1.from > I2.from)
+        {
+            return false;
+        }
+        else
+        {
+            if(I1.to < I2.to)
+            {
+                return true;
+            }
+            else if(I1.to > I2.to)
+            {
+                return false;
+            }
+            //otherwise all elements are the same and we do not need to add anything.
+        }
+    }
+    return false;
+}
+
 void IntelWeb::addToInteractionsVector(std::vector<InteractionTuple>& interactions, InteractionTuple& I)
 {
     //TODO: Possibly use Insertion sort since the elements inside are already sorted?
     //check for duplicates also. Duplicates not allowed
     //ordered by context, then from field, then to field
+    bool alreadyContains = false;
+    for(vector<InteractionTuple>::iterator it = interactions.begin(); it!= interactions.end(); it++)
+    {
+        if((*it) == I)
+        {
+            alreadyContains = true;
+        }
+    }
+    if(alreadyContains == false)
+    {
+        interactions.push_back(I);
+        sort(interactions.begin(), interactions.end(), compare);
+    }
     
 }
 
