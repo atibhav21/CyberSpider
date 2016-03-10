@@ -27,14 +27,15 @@ DiskMultiMap::Iterator::Iterator(const BinaryFile::Offset m_offset, BinaryFile* 
     m_posFromStart = m_offset;
     m_file->read(m_node, m_offset);
     m_key = key;
-    if(m_node.next == -1)
+    /*if(m_node.next == -1)
     {
         m_validity = false;
     }
     else
     {
         m_validity = true;
-    }
+    }*/
+    m_validity = true;
 }
 
 void DiskMultiMap::Iterator::setInvalid()
@@ -125,8 +126,8 @@ bool DiskMultiMap::createNew(const std::string& filename, unsigned int nBuckets)
         
         //write numBuckets number of empty binary file offsets to beginning of
     }
-    bf.close();
-    bf.openExisting(filename);
+    //bf.close();
+    //bf.openExisting(filename);
     return true;
 }
 
@@ -256,8 +257,8 @@ bool DiskMultiMap::insert(const std::string &key, const std::string &value, cons
             return false;
         }
     }
-    bf.close();
-    bf.openExisting(m_filename);
+    //bf.close();
+    //bf.openExisting(m_filename);
     return true;
     
 }
@@ -271,8 +272,8 @@ void DiskMultiMap::addToDeleted(BinaryFile::Offset offset)
     firstDeletedNode = temp.m_offset;
     bf.write(temp, offset);
     bf.write(firstDeletedNode, sizeof(int)); //write the first deleted node at the beginning of the file
-    bf.close();
-    bf.openExisting(m_filename);
+    //bf.close();
+    //bf.openExisting(m_filename);
 }
 
 DiskMultiMap::Iterator DiskMultiMap::search(const std::string& key)
@@ -281,11 +282,16 @@ DiskMultiMap::Iterator DiskMultiMap::search(const std::string& key)
     BinaryFile::Offset m_offset = hashFunction(key.c_str());
     int temp;
     bf.read(temp, m_offset);
+    if(temp == -1)
+    {
+        Iterator it;
+        return it;
+    }
     Iterator it(temp, &bf, key);
-    if((*it).value == "" || (*it).context == "")
+    /*if((*it).value == "" || (*it).context == "")
     {
         ++it;
-    }
+    }*/
     return it;
 }
 
@@ -351,8 +357,8 @@ int DiskMultiMap::erase(const std::string& key, const std::string& value, const 
             bf.read(nextNode, nextNode.next);
         }
     }
-    bf.close();
-    bf.openExisting(m_filename);
+    //bf.close();
+    //bf.openExisting(m_filename);
     return count;
 }
 

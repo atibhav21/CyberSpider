@@ -36,8 +36,8 @@ private:
     DiskMultiMap map_fileToSite; // maps from first argument to second argument
     DiskMultiMap map_siteToFile; // maps from second argument to first argument
     
-    bool malItemsContains(const std::vector<std::string>& badEntitiesFound, std::string& val) const;
-    void addToInteractionsVector(std::vector<InteractionTuple>& interactions, InteractionTuple& I);
+    //bool malItemsContains(const std::vector<std::string>& badEntitiesFound, std::string& val) const;
+    bool interactionVectorContains(std::vector<InteractionTuple>& interactions, InteractionTuple& I);
 };
 
 inline
@@ -46,6 +46,39 @@ bool operator==(const InteractionTuple& I1, const InteractionTuple& I2)
     if(I1.from == I2.from && I1.to == I2.to && I1.context == I2.context)
     {
         return true;
+    }
+    return false;
+}
+
+inline
+bool operator<(const InteractionTuple& I1, const InteractionTuple& I2)
+{
+    if(I1.context< I2.context)
+    {
+        return true;
+    }
+    else if(I1.context == I2.context)
+    {
+        if(I1.from < I2.from)
+        {
+            return true;
+        }
+        else if(I1.from > I2.from)
+        {
+            return false;
+        }
+        else
+        {
+            if(I1.to < I2.to)
+            {
+                return true;
+            }
+            else if(I1.to > I2.to)
+            {
+                return false;
+            }
+            //otherwise all elements are the same and we do not need to add anything.
+        }
     }
     return false;
 }
