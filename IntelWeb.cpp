@@ -14,6 +14,7 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
+#include <set>
 using namespace std;
 
 IntelWeb::IntelWeb()
@@ -154,71 +155,10 @@ void IntelWeb::addToInteractionsVector(std::vector<InteractionTuple>& interactio
 unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigned int minPrevalenceToBeGood,
                    std::vector<std::string>& badEntitiesFound, std::vector<InteractionTuple>& interactions)
 {
-    /*queue<std::string> malItemsQueue;
-    unsigned int maliciousCount = 0;
-    vector<std::string>::const_iterator it = indicators.begin();
-    for(; it!= indicators.end(); it++)
-    {
-        malItemsQueue.push(*it);
-    }
-    while(!malItemsQueue.empty())
-    {
-        //cout<<"A"<<endl;
-        int count = 0;
-        std::string val = malItemsQueue.front();
-        malItemsQueue.pop();
-        DiskMultiMap::Iterator itemIterator = map_fileToSite.search(val);
-        while(itemIterator.isValid()) //find possible malicious items
-        {
-            //this loop is used to find all values associated with the given item and pushes them on the queue if they are possibly malicious items and are not in badEntitiesFound
-            MultiMapTuple m = *itemIterator;
-            if(malItemsContains(badEntitiesFound, m.value) == false)
-            {
-                malItemsQueue.push(m.value);
-            }
-            //push them onto bad interactions vector
-            InteractionTuple I;
-            I.from = val;
-            I.to = (*itemIterator).value;
-            I.context = (*itemIterator).context;
-            addToInteractionsVector(interactions, I);
-            //interactions.push_back(I);
-            ++itemIterator;
-     
-        
-        if(malItemsContains(badEntitiesFound, val) == true)
-        {
-            continue;
-            //item is already part of the badEntitiesFound so continue with the next item
-        }
-        
-        itemIterator = map_siteToFile.search(val);
-        while(itemIterator.isValid())
-        {
-            count++;
-        }
-        if(count>0 && count < minPrevalenceToBeGood)
-        {
-            if(find(badEntitiesFound.begin(), badEntitiesFound.end(), val) == badEntitiesFound.end())
-            {
-                //not already present in the badEntitiesFound vector
-                badEntitiesFound.push_back(val);
-                cout<<"malicious item found"<<endl;
-                maliciousCount++;
-            }
-        }
-        itemIterator = map_siteToFile.search(val);
-        while(itemIterator.isValid())
-        {
-            count++;
-        }
-        if(count < minPrevalenceToBeGood)
-        {
-            
-        }
-    }*/
+    
     int maliciousCount = 0;
     vector<string> possibleMaliciousKeyValues;
+    set<string> badEntitiesFoundSorted;
     for(int k = 0; k<indicators.size(); k++)
     {
         possibleMaliciousKeyValues.push_back(indicators[k]);
@@ -249,7 +189,8 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
                 }
                 if(count<minPrevalenceToBeGood)
                 {
-                    badEntitiesFound.push_back(M.value);
+                    //badEntitiesFound.push_back(M.value);
+                    badEntitiesFoundSorted.insert(M.value);
                     possibleMaliciousKeyValues.push_back(M.value);
                     maliciousCount++;
                 }
@@ -257,38 +198,138 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
             }
             ++it;
         }
-    }
-    /*for(int j = 0; j<possibleMaliciousKeyValues.size();j++)
-    {
-        cout<<"Iteration "<<j<<endl;
-        if(find(badEntitiesFound.begin(), badEntitiesFound.end(), possibleMaliciousKeyValues[j]) != possibleMaliciousKeyValues.end())
-        {
-            cout<<"Item already in Bad Entities so not Pushing back"<<endl;
-            continue;
-        }
-        int count = 0;
-        string val = possibleMaliciousKeyValues[j];
-        DiskMultiMap::Iterator it = map_fileToSite.search(val);
-        while(it.isValid())
-        {
-            count++;
-            ++it;
-        }
         it = map_siteToFile.search(val);
         while(it.isValid())
         {
-            count++;
+            // Check in the second back.
+            MultiMapTuple M= *it;
+            if(find(possibleMaliciousKeyValues.begin(), possibleMaliciousKeyValues.end(), M.value) == possibleMaliciousKeyValues.end())
+            {
+                int count = 0;
+                DiskMultiMap::Iterator it2 = map_siteToFile.search(M.value);
+                while(it2.isValid())
+                {
+                    count++;
+                    ++it2;
+                }
+                it2 = map_fileToSite.search(M.value);
+                while(it2.isValid())
+                {
+                    count++;
+                    ++it2;
+                }
+                if(count<minPrevalenceToBeGood)
+                {
+                    //badEntitiesFound.push_back(M.value);
+                    badEntitiesFoundSorted.insert(M.value);
+                    possibleMaliciousKeyValues.push_back(M.value);
+                    maliciousCount++;
+                }
+            }
             ++it;
         }
-        if(count<minPrevalenceToBeGood)
-        {
-            cout<<"Item Pushed Onto badEntities"<<endl;
-            badEntitiesFound.push_back(val);
-            maliciousCount++;
-        }
-    }*/
-
+    }
+        for(set<string>::iterator it = badEntitiesFoundSorted.begin(); it!=badEntitiesFoundSorted.end(); it++)
+    {
+        badEntitiesFound.push_back(*it);
+    }
     return maliciousCount;
+    
+    
+    /*for(int j = 0; j<possibleMaliciousKeyValues.size();j++)
+     {
+     cout<<"Iteration "<<j<<endl;
+     if(find(badEntitiesFound.begin(), badEntitiesFound.end(), possibleMaliciousKeyValues[j]) != possibleMaliciousKeyValues.end())
+     {
+     cout<<"Item already in Bad Entities so not Pushing back"<<endl;
+     continue;
+     }
+     int count = 0;
+     string val = possibleMaliciousKeyValues[j];
+     DiskMultiMap::Iterator it = map_fileToSite.search(val);
+     while(it.isValid())
+     {
+     count++;
+     ++it;
+     }
+     it = map_siteToFile.search(val);
+     while(it.isValid())
+     {
+     count++;
+     ++it;
+     }
+     if(count<minPrevalenceToBeGood)
+     {
+     cout<<"Item Pushed Onto badEntities"<<endl;
+     badEntitiesFound.push_back(val);
+     maliciousCount++;
+     }
+     }*/
+    
+    /*queue<std::string> malItemsQueue;
+     unsigned int maliciousCount = 0;
+     vector<std::string>::const_iterator it = indicators.begin();
+     for(; it!= indicators.end(); it++)
+     {
+     malItemsQueue.push(*it);
+     }
+     while(!malItemsQueue.empty())
+     {
+     //cout<<"A"<<endl;
+     int count = 0;
+     std::string val = malItemsQueue.front();
+     malItemsQueue.pop();
+     DiskMultiMap::Iterator itemIterator = map_fileToSite.search(val);
+     while(itemIterator.isValid()) //find possible malicious items
+     {
+     //this loop is used to find all values associated with the given item and pushes them on the queue if they are possibly malicious items and are not in badEntitiesFound
+     MultiMapTuple m = *itemIterator;
+     if(malItemsContains(badEntitiesFound, m.value) == false)
+     {
+     malItemsQueue.push(m.value);
+     }
+     //push them onto bad interactions vector
+     InteractionTuple I;
+     I.from = val;
+     I.to = (*itemIterator).value;
+     I.context = (*itemIterator).context;
+     addToInteractionsVector(interactions, I);
+     //interactions.push_back(I);
+     ++itemIterator;
+     
+     
+     if(malItemsContains(badEntitiesFound, val) == true)
+     {
+     continue;
+     //item is already part of the badEntitiesFound so continue with the next item
+     }
+     
+     itemIterator = map_siteToFile.search(val);
+     while(itemIterator.isValid())
+     {
+     count++;
+     }
+     if(count>0 && count < minPrevalenceToBeGood)
+     {
+     if(find(badEntitiesFound.begin(), badEntitiesFound.end(), val) == badEntitiesFound.end())
+     {
+     //not already present in the badEntitiesFound vector
+     badEntitiesFound.push_back(val);
+     cout<<"malicious item found"<<endl;
+     maliciousCount++;
+     }
+     }
+     itemIterator = map_siteToFile.search(val);
+     while(itemIterator.isValid())
+     {
+     count++;
+     }
+     if(count < minPrevalenceToBeGood)
+     {
+     
+     }
+     }*/
+
 }
 
 bool IntelWeb::purge(const std::string& entity)

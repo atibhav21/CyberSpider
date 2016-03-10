@@ -77,7 +77,7 @@ BinaryFile::Offset DiskMultiMap::hashFunction(const char* data)
 {
     std::hash<std::string> str_hash;
     BinaryFile::Offset index = str_hash(data) % numBuckets;
-    return startOfMap + index* sizeof(Node);
+    return startOfMap + index* sizeof(int);
     
     //return the offset of the first link in the hash map.
 }
@@ -109,17 +109,18 @@ bool DiskMultiMap::createNew(const std::string& filename, unsigned int nBuckets)
     m_filename = filename;
     
 
-    string emptyString = "";
-    Node emptyNode;//(emptyString.c_str(), emptyString.c_str(), 0);
-    strcpy(emptyNode.m_data, "");
-    strcpy(emptyNode.m_context, "");
+    //string emptyString = "";
+    //Node emptyNode;//(emptyString.c_str(), emptyString.c_str(), 0);
+    //strcpy(emptyNode.m_data, "");
+    //strcpy(emptyNode.m_context, "");
     for(int i = 0; i<numBuckets; i++)
     {
         //TODO: Change the first item entered into just an Offset type
-        BinaryFile::Offset m_offset = startOfMap + i*sizeof(Node);
-        emptyNode.m_offset = m_offset;
-        emptyNode.next = -1;
-        bf.write(emptyNode,m_offset);
+        BinaryFile::Offset m_offset = startOfMap + i*sizeof(int);
+        int value = -1;
+        //emptyNode.m_offset = m_offset;
+        //emptyNode.next = -1;
+        bf.write(value,m_offset);
         //write numBuckets number of empty nodes in the binary file
         
         //write numBuckets number of empty binary file offsets to beginning of
@@ -167,16 +168,28 @@ bool DiskMultiMap::insert(const std::string &key, const std::string &value, cons
     }
     //get the offset of the
     BinaryFile::Offset index = hashFunction(key.c_str());
-    Node temp;
+    int temp;
     //Node nextNode;
     if(bf.read(temp, index) == false)
         cerr<<"Error in Reading node";
     //bf.read(nextNode, temp.next);
-    
-    
-    while(temp.next!= -1) //O(N/B) efficiency
+    Node n;
+    bool anythingExists = true;
+    if(temp == -1)
     {
-        bf.read(temp, temp.next);
+        //no node exists at that place.
+        n.next = -1;
+        anythingExists = false;
+    }
+    else
+    {
+        bf.read(n,temp);
+    }
+    
+    while(n.next != -1) //O(N/B) efficiency
+    {
+        bf.read(n, n.next);
+        //temp = n.next;
         
         //bf.read(nextNode, nextNode.next);
     }
@@ -190,24 +203,32 @@ bool DiskMultiMap::insert(const std::string &key, const std::string &value, cons
         Node deletedNode;
         bf.read(deletedNode, firstDeletedNode);
         firstDeletedNode = deletedNode.next;
-        //if(deletedNode.next!= -1)
-        //{
-            temp.next = firstDeletedNode;
-            Node newNode;//(value.c_str(),context.c_str(), deletedNode.m_offset);
-            strcpy(newNode.m_data, value.c_str());
-            strcpy(newNode.m_context, context.c_str());
-            newNode.m_offset = deletedNode.m_offset;
-            newNode.next = -1;
-            newNode.deleted = false;
-            if(bf.write(newNode, newNode.m_offset) == false)
-            {
-                cerr<<"Error in reusing Node"<<endl;
-                return false;
-            }
-            else
-            {
-                cerr<<"Node Reused"<<endl;
-            }
+        if(anythingExists == true)
+        {
+            n.next = firstDeletedNode;
+            bf.write(n, n.m_offset);
+        }
+        else
+        {
+            temp = firstDeletedNode;
+            bf.write(temp, index);
+        }
+        
+        Node newNode;//(value.c_str(),context.c_str(), deletedNode.m_offset);
+        strcpy(newNode.m_data, value.c_str());
+        strcpy(newNode.m_context, context.c_str());
+        newNode.m_offset = deletedNode.m_offset;
+        newNode.next = -1;
+        newNode.deleted = false;
+        if(bf.write(newNode, newNode.m_offset) == false)
+        {
+            cerr<<"Error in reusing Node"<<endl;
+            return false;
+        }
+        else
+        {
+            cerr<<"Node Reused"<<endl;
+        }
         //}
     }
     else
@@ -218,8 +239,17 @@ bool DiskMultiMap::insert(const std::string &key, const std::string &value, cons
         strcpy(newNode.m_context, context.c_str());
         newNode.m_offset = bf.fileLength();
         newNode.next = -1;
-        temp.next = newNode.m_offset;
-        bf.write(temp, temp.m_offset);
+        //n.next = newNode.m_offset;
+        if(anythingExists == true)
+        {
+            n.next = newNode.m_offset;
+            bf.write(n, n.m_offset);
+        }
+        else
+        {
+            temp = newNode.m_offset;
+            bf.write(temp, index);
+        }
         if(bf.write(newNode, newNode.m_offset)== false)
         {
             cerr<<"Error in allocating new Node due to no Empty nodes available"<<endl;
@@ -249,7 +279,9 @@ DiskMultiMap::Iterator DiskMultiMap::search(const std::string& key)
 {
     //TODO: Check if it works
     BinaryFile::Offset m_offset = hashFunction(key.c_str());
-    Iterator it(m_offset, &bf, key);
+    int temp;
+    bf.read(temp, m_offset);
+    Iterator it(temp, &bf, key);
     if((*it).value == "" || (*it).context == "")
     {
         ++it;
@@ -265,10 +297,36 @@ int DiskMultiMap::erase(const std::string& key, const std::string& value, const 
     //TODO: code does not check for the temp node. Fix that. Solution: Make temp initially the dummy node
     int index = hashFunction(key.c_str());
     int count = 0;
+    int n;
+    bf.read(n, index);
+    if(n == -1)
+    {
+        cerr<<"No Such Key"<<endl;
+        return 0;
+    }
     Node temp;
     Node nextNode;
-    bf.read(temp, index);
-    bf.read(nextNode, temp.next);
+    bf.read(temp, n);
+    if(temp.next == -1 && strcmp(value.c_str(), temp.m_data) == 0 &&
+                                            strcmp(context.c_str(), temp.m_context)== 0)
+    {
+        //just 1 item
+        n = -1;
+        bf.write(n, index);
+        addToDeleted(temp.m_offset);
+        return 1;
+    }
+    else
+    {
+        bf.read(nextNode, temp.next);
+    }
+    if(strcmp(value.c_str(), temp.m_data) == 0 && strcmp(context.c_str(), temp.m_context)== 0)
+    {
+        n = nextNode.m_offset;
+        count++;
+        addToDeleted(temp.m_offset);
+        bf.write(n, index);
+    }
     while(temp.next!= -1)
     {
         if(strcmp(value.c_str(), nextNode.m_data) == 0 && strcmp(context.c_str(), nextNode.m_context)== 0)
@@ -284,7 +342,14 @@ int DiskMultiMap::erase(const std::string& key, const std::string& value, const 
             //only increment temp if item has not been deleted.
             temp = nextNode;
         }
-        bf.read(nextNode, nextNode.next);
+        /*if(nextNode.next == -1)
+        {
+            break;
+        }*/
+        //else
+        {
+            bf.read(nextNode, nextNode.next);
+        }
     }
     bf.close();
     bf.openExisting(m_filename);
