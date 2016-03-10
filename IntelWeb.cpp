@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 #include "IntelWeb.h"
+#include "DiskMultiMap.h"
+#include "MultiMapTuple.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -68,20 +70,20 @@ bool IntelWeb::ingest(const std::string& telemetryFile)
         string key,value,context;
         if(! (iss >> context >> key >> value))
         {
-            cout<<"Ignoring line due to bad input format"<<line;
+            cerr<<"Ignoring line due to bad input format"<<line;
         }
         //possible bug with insert method
         if(map_fileToSite.insert(key, value, context) == false)
         {
-            cout<<"Error in inserting into file"<<endl;
+            cerr<<"Error in inserting into file"<<endl;
             return false;
         }
         if(map_siteToFile.insert(value, key, context) == false)
         {
-            cout<<"Error in inserting into file"<<endl;
+            cerr<<"Error in inserting into file"<<endl;
             return false;
         }
-        cout<<context<<" "<<key<<" "<<value<<endl;
+        //cerr<<context<<" "<<key<<" "<<value<<endl;
     }
     return true;
 }
@@ -175,17 +177,16 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
                 malItemsQueue.push(m.value);
             }
             //push them onto bad interactions vector
-            /*InteractionTuple I;
+            InteractionTuple I;
             I.from = val;
             I.to = (*itemIterator).value;
             I.context = (*itemIterator).context;
             addToInteractionsVector(interactions, I);
             //interactions.push_back(I);
             ++itemIterator;
-            
-        }
+     
         
-        /*if(malItemsContains(badEntitiesFound, val) == true)
+        if(malItemsContains(badEntitiesFound, val) == true)
         {
             continue;
             //item is already part of the badEntitiesFound so continue with the next item
@@ -206,7 +207,7 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
                 maliciousCount++;
             }
         }
-        /*itemIterator = map_siteToFile.search(val);
+        itemIterator = map_siteToFile.search(val);
         while(itemIterator.isValid())
         {
             count++;
@@ -218,14 +219,12 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
     }*/
     int maliciousCount = 0;
     vector<string> possibleMaliciousKeyValues;
-    for(int k = 0; k<badEntitiesFound.size(); k++)
+    for(int k = 0; k<indicators.size(); k++)
     {
-        cout<<"Item added "<<endl;
-        possibleMaliciousKeyValues.push_back(badEntitiesFound[k]);
+        possibleMaliciousKeyValues.push_back(indicators[k]);
     }
     for(int i = 0; i<possibleMaliciousKeyValues.size(); i++)
     {
-        cout<<"Iteration "<<i<<endl;
         string val;
         val = possibleMaliciousKeyValues[i];
         DiskMultiMap::Iterator it = map_fileToSite.search(val);
@@ -234,12 +233,32 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
             MultiMapTuple M = *it;
             if(find(possibleMaliciousKeyValues.begin(), possibleMaliciousKeyValues.end(), M.value) == possibleMaliciousKeyValues.end())
             {
-                cout<< "Item added to possible Values"<<endl;
-                possibleMaliciousKeyValues.push_back(M.value);
+                /*possibleMaliciousKeyValues.push_back(M.value);*/
+                int count = 0;
+                DiskMultiMap::Iterator it1 = map_fileToSite.search(M.value);
+                while(it1.isValid())
+                {
+                    count++;
+                    ++it1;
+                }
+                it1 = map_siteToFile.search(M.value);
+                while(it1.isValid())
+                {
+                    count++;
+                    ++it1;
+                }
+                if(count<minPrevalenceToBeGood)
+                {
+                    badEntitiesFound.push_back(M.value);
+                    possibleMaliciousKeyValues.push_back(M.value);
+                    maliciousCount++;
+                }
+                
             }
+            ++it;
         }
     }
-    for(int j = 0; j<possibleMaliciousKeyValues.size();j++)
+    /*for(int j = 0; j<possibleMaliciousKeyValues.size();j++)
     {
         cout<<"Iteration "<<j<<endl;
         if(find(badEntitiesFound.begin(), badEntitiesFound.end(), possibleMaliciousKeyValues[j]) != possibleMaliciousKeyValues.end())
@@ -267,9 +286,8 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
             badEntitiesFound.push_back(val);
             maliciousCount++;
         }
-    }
+    }*/
 
-    cout<<"End of Crawl Reached"<<endl;
     return maliciousCount;
 }
 

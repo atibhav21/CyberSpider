@@ -13,43 +13,7 @@
 #include <cassert>
 #include <functional>
 
-/*HashMap::HashMap(int numBuckets)
-{
-    m_array = new Node*[numBuckets];
-    m_numBuckets = numBuckets;
-    for(int i = 0 ; i< m_numBuckets; i++)
-    {
-        m_array[i] = nullptr;
-    }
-}
 
-
-int HashMap::hashFunction(char *data)
-{
-    std::hash<std::string> str_hash;
-    int index = str_hash(data) % m_numBuckets;
-    return index;
-}
-
-Node* HashMap::insertionNode(char *data)
-{
-    int index = hashFunction(data);
-    return m_array[index];
-    
-}
-
-Node* HashMap::get(char* data)
-{
-    return m_array[hashFunction(data)];
-}
-
-
-template <typename T>
-T* HashMap<T>::remove(char* data)
-{
-    int index = hashFunction(data);
-    m_array.erase(m_array.begin()+ index);
-}*/
 
 DiskMultiMap::Iterator::Iterator()
 {

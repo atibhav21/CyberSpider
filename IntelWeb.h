@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 #include <queue>
-#include "InteractionTuple.h"
 
 class IntelWeb
 {
