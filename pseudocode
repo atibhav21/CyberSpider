@@ -1,0 +1,88 @@
+Push all the items related to the malicious items onto the queue.
+If they are already considered a bad entity, then just find all the items related to it but don't push it onto the queue
+Otherwise,
+	see how many times it occurs in the entire hashtable
+	if Items frequency is less than the Pgood, then add it to the BadEntities Found Vector
+
+
+vector<string> possibleMaliciousKeyValues;
+for(vector<std::string>::const_iterator it = badEntitiesFound.begin(); it!= badEntititesFound.end(); it++)
+{
+	possibleMaliciousKeyValues.push_back(*it);
+}
+for(int i = 0; i<possibleMaliciousKeyValues.size(); i++)
+{
+	string val;
+	val = possibleMaliciousKeyValues[i];
+	DiskMultiMap::Iterator it = map_fileToSite.search(val);
+	while(it.isValid())
+	{
+		MultiMapTuple M = *it;
+		if(notInVector(M.val))
+		{
+			possibleMaliciousKeyValues.push_back(M.val);
+		}
+	}
+}
+for(int j = 0; j<possibleMaliciousKeyValues.size();j++)
+{
+	if(already in badEntites)
+	{
+		continue;
+	}
+	int count = 0;
+	string val = possibleMaliciousKeyValues[i];
+	DiskMultiMap::Iterator it = map_fileToSite.search(val);
+	while(it.isValid())
+	{
+		count++;
+		++it;
+	}
+	it = map_siteToFile.search(val);
+	while(it.isValid())
+	{
+		count++;
+		++it;
+	}
+	if(count<PGood)
+	{
+		badEntitiesFound.push_back(val);
+	}
+}
+
+
+struct Node
+{
+	int data;
+	Node* left;
+	Node* right;
+	Node* parent;	
+};
+
+Node* prev = nullptr;
+Node* curr = rootNode;
+while(curr!= nullptr)
+{
+	if(data >= curr->data)
+	{
+		curr = curr->right;
+		prev = curr;
+	}
+	else
+	{
+		curr = curr->left;
+		prev = curr;
+	}
+}
+curr = new Node(data);
+curr->parent = prev;
+curr->right = nullptr;
+curr->left = nullptr;
+if(curr->data>= prev->data)
+{
+	prev->right = curr;
+}
+else
+{
+	prev->left = curr;
+}

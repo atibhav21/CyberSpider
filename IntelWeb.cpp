@@ -76,42 +76,16 @@ bool IntelWeb::ingest(const std::string& telemetryFile)
         //possible bug with insert method
         if(map_fileToSite.insert(key, value, context) == false)
         {
-            cerr<<"Error in inserting into file"<<endl;
+            cout<<"Error in inserting into file"<<endl;
             return false;
         }
         if(map_siteToFile.insert(value, key, context) == false)
         {
-            cerr<<"Error in inserting into file"<<endl;
+            cout<<"Error in inserting into file"<<endl;
             return false;
         }
-        //cerr<<context<<" "<<key<<" "<<value<<endl;
     }
     return true;
-}
-
-/*bool IntelWeb::malItemsContains(const std::vector<std::string>& badEntitiesFound, std::string& val) const
-{
-    if(find(badEntitiesFound.begin(), badEntitiesFound.end(), val)!= badEntitiesFound.end())
-    {
-        return true;
-    }
-    return false;
-}*/
-
-bool IntelWeb::interactionVectorContains(std::vector<InteractionTuple>& interactions, InteractionTuple& I)
-{
-    //TODO: Possibly use Insertion sort since the elements inside are already sorted?
-    //check for duplicates also. Duplicates not allowed
-    //ordered by context, then from field, then to field
-    for(vector<InteractionTuple>::iterator it = interactions.begin(); it!= interactions.end(); it++)
-    {
-        if((*it) == I)
-        {
-            return true;
-        }
-    }
-    return false;
-    
 }
 
 unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigned int minPrevalenceToBeGood,
@@ -127,10 +101,9 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
         maliciousKeyValues.push_back(*it);
     }
     for(int i = 0; i<maliciousKeyValues.size(); i++) //O(Tlog T)
-    //while(possibleMaliciousKeyValues.empty() == false)
     {
         string val;
-        val = maliciousKeyValues[i]; //possibleMaliciousKeyValues[i];
+        val = maliciousKeyValues[i];
         DiskMultiMap::Iterator keyIterator = map_fileToSite.search(val);
         while(keyIterator.isValid()) //O(N/B)
         {
@@ -139,24 +112,21 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
             I.context = M.context;
             I.from = M.key;
             I.to = M.value;
-            if(interactionVectorContains(interactions, I) == false)
-            {
-                badInteractionsSorted.insert(I);
-            }
+            badInteractionsSorted.insert(I);
             if(find(maliciousKeyValues.begin(), maliciousKeyValues.end(), M.value) ==
                                                                         maliciousKeyValues.end())
             {
                 /*possibleMaliciousKeyValues.push_back(M.value);*/
                 int count = 0;
                 DiskMultiMap::Iterator it1 = map_fileToSite.search(M.value);
-                while(it1.isValid())
+                while(it1.isValid() && count<minPrevalenceToBeGood)
                 {
                     //number of times item is key
                     ++it1;
                     count++;
                 }
                 it1 = map_siteToFile.search(M.value);
-                while(it1.isValid())
+                while(it1.isValid() && count<minPrevalenceToBeGood)
                 {
                     //number of times item is value
                     ++it1;
@@ -176,27 +146,24 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
         DiskMultiMap::Iterator it = map_siteToFile.search(val);
         while(it.isValid())
         {
-            // Check in the second back.
+            // Check in the opposite map
             MultiMapTuple M= *it;
             InteractionTuple I;
             I.context = M.context;
             I.from = M.value;
             I.to = M.key;
-            if(interactionVectorContains(interactions, I) == false)
-            {
-                badInteractionsSorted.insert(I);
-            }
+            badInteractionsSorted.insert(I); //since its a set, no duplicates will be inserted
             if(find(maliciousKeyValues.begin(), maliciousKeyValues.end(), M.value) == maliciousKeyValues.end())
             {
                 int count = 0;
                 DiskMultiMap::Iterator it2 = map_siteToFile.search(M.value);
-                while(it2.isValid())
+                while(it2.isValid() && count<minPrevalenceToBeGood)
                 {
                     count++;
                     ++it2;
                 }
                 it2 = map_fileToSite.search(M.value);
-                while(it2.isValid())
+                while(it2.isValid() && count<minPrevalenceToBeGood)
                 {
                     count++;
                     ++it2;
@@ -220,7 +187,7 @@ unsigned int IntelWeb::crawl(const std::vector<std::string>& indicators, unsigne
     {
         interactions.push_back(*it);
     }
-    cout<<"End of method"<<endl;
+    //cout<<"End of method"<<endl;
     return maliciousCount;
     
     
@@ -235,23 +202,25 @@ bool IntelWeb::purge(const std::string& entity)
     while(it.isValid())
     {
         //erases items where it is the key.
-        if(map_fileToSite.erase((*it).key, (*it).value, (*it).context) > 0)
+        MultiMapTuple M = *it;
+        ++it;
+        if(map_fileToSite.erase(M.key, M.value, M.context) > 0)
         {
-            map_siteToFile.erase((*it).value, (*it).key, (*it).context);
+            map_siteToFile.erase(M.value, M.key, M.context);
             returnValue = true;
         }
-        ++it;
     }
     it = map_siteToFile.search(entity);
     while(it.isValid())
     {
         //erase items where it is the value
-        if(map_siteToFile.erase((*it).key, (*it).value, (*it).context) > 0)
+        MultiMapTuple M = *it;
+        ++it;
+        if(map_siteToFile.erase(M.key, M.value, M.context) > 0)
         {
-            map_fileToSite.erase((*it).value, (*it).key, (*it).context);
+            map_fileToSite.erase(M.value, M.key, M.context);
             returnValue = true;
         }
-        ++it;
     }
     return returnValue;
     

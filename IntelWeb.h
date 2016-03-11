@@ -37,7 +37,6 @@ private:
     DiskMultiMap map_siteToFile; // maps from second argument to first argument
     
     //bool malItemsContains(const std::vector<std::string>& badEntitiesFound, std::string& val) const;
-    bool interactionVectorContains(std::vector<InteractionTuple>& interactions, InteractionTuple& I);
 };
 
 inline
@@ -53,6 +52,14 @@ bool operator==(const InteractionTuple& I1, const InteractionTuple& I2)
 inline
 bool operator<(const InteractionTuple& I1, const InteractionTuple& I2)
 {
+    if(I1.context.size()<I2.context.size())
+    {
+        return true;
+    }
+    else if(I1.context.size()>I2.context.size())
+    {
+        return false;
+    }
     if(I1.context< I2.context)
     {
         return true;
